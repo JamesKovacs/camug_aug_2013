@@ -50,12 +50,31 @@ class Person
   initializer :name, :age, :birthdate
 end
 
+gateway = Gateway.new
 
+#people = gateway.find_using(:all_people_query)
+people = gateway.find_using(AllPeopleQuery.new)
 
+people.each do |person|
+  puts "#{person.name} is #{person.age} years old"
+end
 
+class AllPeopleQuery
+  def sql_string
+    "select name, age, birthdate from people"
+  end
 
+  def map(row)
+    Person.new(row[:name], row[:age], row[:birthdate]) unless row[:ignore]
+  end
+end
 
-
-
-
+class Gateway
+  def find_using(query)
+    rows = execute_sql(query.sql_string)
+    rows.map do |row|
+      query.map(row)
+    end
+  end
+end
 
